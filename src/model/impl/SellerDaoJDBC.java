@@ -91,7 +91,22 @@ public class SellerDaoJDBC implements SellerDao {
 
     @Override
     public void deleteById(Integer id) {
+        PreparedStatement preparedStatement = null;
 
+        try {
+            preparedStatement = conn.prepareStatement(
+                    "DELETE FROM seller WHERE Id = ?"
+            );
+
+            preparedStatement.setInt(1, id);
+
+            preparedStatement.executeUpdate();
+
+        } catch (SQLException e) {
+            throw new DbException(e.getMessage());
+        } finally {
+            DB.statementClose(preparedStatement);
+        }
     }
 
     @Override
@@ -125,24 +140,6 @@ public class SellerDaoJDBC implements SellerDao {
         }
     }
 
-    private Seller instateateSeller(ResultSet resultSet, Department department) throws SQLException {
-        Seller seller = new Seller();
-        seller.setId(resultSet.getInt("Id"));
-        seller.setName(resultSet.getString("Name"));
-        seller.setEmail(resultSet.getString("Email"));
-        seller.setBirthDate(resultSet.getDate("BirthDate").toLocalDate());
-        seller.setBaseSalary(resultSet.getDouble("BaseSalary"));
-        seller.setDepartment(department);
-        return seller;
-    }
-
-    private Department instateateDepartment(ResultSet resultSet) throws SQLException {
-        Department department = new  Department();
-        department.setId(resultSet.getInt("DepartmentId"));
-        department.setName(resultSet.getString("DepName"));
-        return department;
-    }
-
     @Override
     public List<Seller> findAll() {
         PreparedStatement preparedStatement = null;
@@ -154,7 +151,6 @@ public class SellerDaoJDBC implements SellerDao {
                     "ON seller.DepartmentId = department.Id " +
                     "ORDER BY Name");
 
-            preparedStatement.setInt(1, department.getId());
             resultSet = preparedStatement.executeQuery();
 
             List<Seller> list = new ArrayList<>();
@@ -218,5 +214,23 @@ public class SellerDaoJDBC implements SellerDao {
             DB.statementClose(preparedStatement);
             DB.resultSetClose(resultSet);
         }
+    }
+
+    private Seller instateateSeller(ResultSet resultSet, Department department) throws SQLException {
+        Seller seller = new Seller();
+        seller.setId(resultSet.getInt("Id"));
+        seller.setName(resultSet.getString("Name"));
+        seller.setEmail(resultSet.getString("Email"));
+        seller.setBirthDate(resultSet.getDate("BirthDate").toLocalDate());
+        seller.setBaseSalary(resultSet.getDouble("BaseSalary"));
+        seller.setDepartment(department);
+        return seller;
+    }
+
+    private Department instateateDepartment(ResultSet resultSet) throws SQLException {
+        Department department = new  Department();
+        department.setId(resultSet.getInt("DepartmentId"));
+        department.setName(resultSet.getString("DepName"));
+        return department;
     }
 }
